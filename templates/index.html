@@ -1,0 +1,214 @@
+<!-- File: templates/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Beranda - DigitalLibrary{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 fade-in">
+                <h1 class="display-4 fw-bold mb-4">Selamat Datang di DigitalLibrary</h1>
+                <p class="lead mb-4">Temukan ribuan koleksi buku digital dari berbagai genre. Baca kapan saja, di mana saja, gratis!</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('books') }}" class="btn btn-primary-custom btn-lg">
+                        <i class="fas fa-book me-2"></i>Jelajahi Buku
+                    </a>
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-custom btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Daftar Gratis
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-number">{{ total_books }}</div>
+                    <div class="stat-label">Total Buku</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Pembaca Aktif</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-number">{{ total_categories }}</div>
+                    <div class="stat-label">Kategori</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-number">{{ total_reads }}</div>
+                    <div class="stat-label">Total Dibaca</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Jelajahi Kategori</h2>
+            <p>Temukan buku berdasarkan kategori yang Anda minati</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('books') }}?category={{ category.id_kategori }}" class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <h5 class="category-title">{{ category.nama_kategori }}</h5>
+                    <span class="category-count">{{ category.jumlah_buku }} Buku</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Recent Books Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-title">
+            <h2>Buku Terbaru</h2>
+            <p>Koleksi buku terbaru yang baru saja ditambahkan</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for book in recent_books %}
+            <div class="col-lg-4 col-md-6">
+                <div class="book-card">
+                    <div class="book-cover" style="background: linear-gradient(135deg, var(--soft-teal), var(--medium-purple));">
+                        <i class="fas fa-book-open"></i>
+                        {% if book.jumlah_baca > 0 %}
+                        <span class="book-badge">{{ book.jumlah_baca }} dibaca</span>
+                        {% endif %}
+                    </div>
+                    <div class="book-info">
+                        <h5 class="book-title">{{ book.judul }}</h5>
+                        <p class="book-author">{{ book.penulis }}</p>
+                        <p class="book-rating">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star-half-alt text-warning"></i>
+                            <span>(4.5)</span>
+                        </p>
+                        <a href="{{ url_for('book_detail', book_id=book.id_buku) }}" class="btn btn-book">
+                            <i class="fas fa-info-circle me-2"></i>Detail Buku
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{{ url_for('books') }}" class="btn btn-primary-custom">
+                <i class="fas fa-arrow-right me-2"></i>Lihat Semua Buku
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Books Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Buku Populer</h2>
+            <p>Buku-buku yang paling banyak dibaca oleh pengguna</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for book in popular_books %}
+            <div class="col-md-3 col-6">
+                <div class="book-card">
+                    <div class="book-cover" style="background: linear-gradient(135deg, var(--soft-pink), var(--dark-purple));">
+                        <i class="fas fa-book"></i>
+                        {% if book.jumlah_baca > 0 %}
+                        <span class="book-badge">{{ book.jumlah_baca }} dibaca</span>
+                        {% endif %}
+                    </div>
+                    <div class="book-info">
+                        <h6 class="book-title">{{ book.judul|truncate(20) }}</h6>
+                        <p class="book-author">{{ book.penulis|truncate(15) }}</p>
+                        <a href="{{ url_for('book_detail', book_id=book.id_buku) }}" class="btn btn-book btn-sm">
+                            <i class="fas fa-info-circle me-1"></i>Detail
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-title">
+            <h2>Mengapa Memilih DigitalLibrary?</h2>
+            <p>Fitur-fitur unggulan yang kami sediakan untuk kenyamanan membaca Anda</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-item text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-book-reader"></i>
+                    </div>
+                    <h4>Baca Online</h4>
+                    <p>Baca buku langsung di browser tanpa perlu download</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-bookmark"></i>
+                    </div>
+                    <h4>Bookmark</h4>
+                    <p>Simpan buku favorit Anda untuk dibaca nanti</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h4>Riwayat Baca</h4>
+                    <p>Pantau progress membaca Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

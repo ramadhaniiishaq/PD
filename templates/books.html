@@ -1,0 +1,123 @@
+<!-- File: templates/books.html -->
+{% extends 'base.html' %}
+
+{% block title %}Koleksi Buku - DigitalLibrary{% endblock %}
+
+{% block content %}
+<!-- Search Section -->
+<section class="search-section">
+    <div class="container">
+        <form method="GET" action="{{ url_for('books') }}" class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control search-input border-start-0" 
+                           name="search" placeholder="Cari judul, penulis, atau penerbit..." 
+                           value="{{ search_query or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="category" class="form-select search-input">
+                    <option value="">Semua Kategori</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id_kategori }}" 
+                            {% if selected_category_id == category.id_kategori %}selected{% endif %}>
+                        {{ category.nama_kategori }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn search-btn w-100">
+                    <i class="fas fa-search me-2"></i>Cari Buku
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Books Grid Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Koleksi Buku</h2>
+            <span class="text-muted">Menampilkan {{ books|length }} buku</span>
+        </div>
+        
+        {% if books %}
+        <div class="row g-4">
+            {% for book in books %}
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="book-card">
+                    <div class="book-cover" style="background: linear-gradient(135deg, var(--soft-teal), var(--medium-purple));">
+                        <i class="fas fa-book-open"></i>
+                        {% if book.baca_count > 0 %}
+                        <span class="book-badge">{{ book.baca_count }} dibaca</span>
+                        {% endif %}
+                    </div>
+                    <div class="book-info">
+                        <h6 class="book-title">{{ book.judul|truncate(25) }}</h6>
+                        <p class="book-author">{{ book.penulis|truncate(20) }}</p>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark">{{ book.nama_kategori }}</span>
+                            <small class="text-muted">
+                                <i class="fas fa-bookmark me-1"></i>{{ book.bookmark_count }}
+                            </small>
+                        </div>
+                        <a href="{{ url_for('book_detail', book_id=book.id_buku) }}" class="btn btn-book btn-sm">
+                            <i class="fas fa-info-circle me-1"></i>Detail
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('books', page=current_page-1, category=selected_category_id, search=search_query) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == current_page %}
+                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% elif p >= current_page - 2 and p <= current_page + 2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('books', page=p, category=selected_category_id, search=search_query) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if current_page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('books', page=current_page+1, category=selected_category_id, search=search_query) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+            <h4>Tidak ada buku ditemukan</h4>
+            <p class="text-muted">Coba dengan kata kunci pencarian yang berbeda</p>
+            <a href="{{ url_for('books') }}" class="btn btn-primary-custom">
+                <i class="fas fa-sync-alt me-2"></i>Reset Filter
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

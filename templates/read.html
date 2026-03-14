@@ -1,0 +1,97 @@
+<!-- File: templates/read.html -->
+{% extends 'base.html' %}
+
+{% block title %}Membaca: {{ book.judul }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reading-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--soft-teal), var(--soft-pink));
+        z-index: 9999;
+        transition: width 0.2s;
+    }
+    
+    .pdf-viewer {
+        height: calc(100vh - 76px);
+        width: 100%;
+        border: none;
+        margin-top: 76px;
+    }
+    
+    .reading-toolbar {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        z-index: 9998;
+        display: flex;
+        gap: 15px;
+    }
+    
+    .reading-toolbar button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: var(--soft-teal);
+        color: white;
+        transition: all 0.3s;
+    }
+    
+    .reading-toolbar button:hover {
+        background: var(--medium-purple);
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reading-progress" id="readingProgress"></div>
+
+<iframe src="{{ url_for('view_pdf', filename=book.file_buku) }}#toolbar=1&navpanes=1&scrollbar=1" 
+        class="pdf-viewer" 
+        frameborder="0">
+</iframe>
+
+<div class="reading-toolbar">
+    <button onclick="window.print()" title="Print">
+        <i class="fas fa-print"></i>
+    </button>
+    <button onclick="window.open('{{ url_for('view_pdf', filename=book.file_buku) }}', '_blank')" title="Open in New Tab">
+        <i class="fas fa-external-link-alt"></i>
+    </button>
+    <button onclick="window.location.href='{{ url_for('book_detail', book_id=book.id_buku) }}'" title="Book Details">
+        <i class="fas fa-info-circle"></i>
+    </button>
+    <button onclick="window.location.href='{{ url_for('books') }}'" title="Back to Library">
+        <i class="fas fa-book"></i>
+    </button>
+</div>
+
+<script>
+// Progress bar for reading
+window.addEventListener('scroll', function() {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('readingProgress').style.width = scrolled + '%';
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        window.print();
+    }
+});
+</script>
+{% endblock %}

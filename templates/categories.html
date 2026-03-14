@@ -1,0 +1,30 @@
+<!-- File: templates/categories.html -->
+{% extends 'base.html' %}
+
+{% block title %}Kategori - DigitalLibrary{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="section-title">
+            <h2>Kategori Buku</h2>
+            <p>Jelajahi koleksi buku berdasarkan kategori</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-md-3">
+                <a href="{{ url_for('books') }}?category={{ category.id_kategori }}" class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <h4 class="category-title">{{ category.nama_kategori }}</h4>
+                    <span class="category-count">{{ category.jumlah_buku }} Buku</span>
+                    <small class="text-muted d-block mt-2">{{ category.total_baca }} kali dibaca</small>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

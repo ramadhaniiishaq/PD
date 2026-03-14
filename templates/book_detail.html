@@ -1,0 +1,105 @@
+<!-- File: templates/book_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ book.judul }} - DigitalLibrary{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Beranda</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('books') }}">Buku</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('books') }}?category={{ book.id_kategori }}">{{ book.nama_kategori }}</a></li>
+                <li class="breadcrumb-item active">{{ book.judul|truncate(30) }}</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="book-cover" style="height: 400px; background: linear-gradient(135deg, var(--soft-teal), var(--medium-purple));">
+                        {% if book.cover %}
+                        <img src="{{ url_for('uploaded_file', filename='covers/' + book.cover) }}" class="w-100 h-100 object-fit-cover" alt="{{ book.judul }}">
+                        {% else %}
+                        <i class="fas fa-book-open fa-5x"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h1 class="mb-3">{{ book.judul }}</h1>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-user me-2"></i>{{ book.penulis }}
+                    </p>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-building me-2"></i>{{ book.penerbit or '-' }} | 
+                        <i class="fas fa-calendar me-2"></i>{{ book.tahun_terbit or '-' }}
+                    </p>
+                    
+                    <div class="d-flex gap-3 mb-4">
+                        <span class="badge bg-primary-custom py-2 px-3">
+                            <i class="fas fa-tag me-1"></i>{{ book.nama_kategori }}
+                        </span>
+                        <span class="badge bg-secondary-custom py-2 px-3">
+                            <i class="fas fa-eye me-1"></i>{{ book.baca_count }} Dibaca
+                        </span>
+                        <span class="badge bg-soft-pink py-2 px-3">
+                            <i class="fas fa-bookmark me-1"></i>{{ book.bookmark_count }} Bookmark
+                        </span>
+                    </div>
+                    
+                    <h5 class="mb-3">Deskripsi</h5>
+                    <p class="text-muted mb-4">{{ book.deskripsi or 'Tidak ada deskripsi' }}</p>
+                    
+                    <div class="d-flex gap-3">
+                        {% if session.user_id %}
+                            <form method="POST" action="{{ url_for('toggle_bookmark', book_id=book.id_buku) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-{% if is_bookmarked %}danger{% else %}outline-primary{% endif %}-custom">
+                                    <i class="fas fa-bookmark me-2"></i>
+                                    {% if is_bookmarked %}Hapus dari Bookmark{% else %}Tambah ke Bookmark{% endif %}
+                                </button>
+                            </form>
+                            
+                            <a href="{{ url_for('read_book', book_id=book.id_buku) }}" class="btn btn-primary-custom">
+                                <i class="fas fa-book-open me-2"></i>Baca Buku
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-primary-custom">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login untuk Membaca
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Books -->
+        {% if related_books %}
+        <div class="mt-5">
+            <h3 class="mb-4">Buku Terkait</h3>
+            <div class="row g-4">
+                {% for related in related_books %}
+                <div class="col-md-3 col-6">
+                    <div class="book-card">
+                        <div class="book-cover" style="background: linear-gradient(135deg, var(--soft-pink), var(--dark-purple));">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="book-info">
+                            <h6 class="book-title">{{ related.judul|truncate(20) }}</h6>
+                            <p class="book-author">{{ related.penulis|truncate(15) }}</p>
+                            <a href="{{ url_for('book_detail', book_id=related.id_buku) }}" class="btn btn-book btn-sm">
+                                <i class="fas fa-info-circle me-1"></i>Detail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

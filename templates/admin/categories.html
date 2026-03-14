@@ -1,0 +1,92 @@
+<!-- File: templates/admin/categories.html -->
+{% extends 'base.html' %}
+
+{% block title %}Kelola Kategori - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="admin-sidebar">
+                <h5 class="mb-3">Menu Admin</h5>
+                <div class="list-group">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-dashboard me-2"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_books') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-book me-2"></i>Kelola Buku
+                    </a>
+                    <a href="{{ url_for('admin_categories') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tags me-2"></i>Kelola Kategori
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <h2 class="mb-4">Kelola Kategori</h2>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Tambah Kategori Baru</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_category') }}" class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="nama_kategori" placeholder="Nama Kategori" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary-custom w-100">
+                                <i class="fas fa-plus-circle me-2"></i>Tambah
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Daftar Kategori</h5>
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Kategori</th>
+                                    <th>Jumlah Buku</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.id_kategori }}</td>
+                                    <td>{{ category.nama_kategori }}</td>
+                                    <td>{{ category.jumlah_buku }} buku</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('delete_category', category_id=category.id_kategori) }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus kategori ini?');">
+                                            <button type="submit" class="btn btn-sm btn-danger" {% if category.jumlah_buku > 0 %}disabled{% endif %}>
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% if category.jumlah_buku > 0 %}
+                                        <small class="text-muted d-block">Tidak bisa dihapus (masih memiliki buku)</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">Belum ada kategori</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
