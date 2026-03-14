@@ -17,7 +17,7 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'db_PD'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  
 app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 app.config['ALLOWED_IMAGES'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['BOOKS_PER_PAGE'] = 12
@@ -164,7 +164,6 @@ def books():
 def book_detail(book_id):
     cursor = mysql.connection.cursor()
     
-    # Get book details
     cursor.execute("""
         SELECT b.*, k.nama_kategori,
         (SELECT COUNT(*) FROM bookmark WHERE id_buku = b.id_buku) as bookmark_count,
@@ -179,7 +178,6 @@ def book_detail(book_id):
         flash('Buku tidak ditemukan', 'danger')
         return redirect(url_for('books'))
     
-    # Check if bookmarked
     is_bookmarked = False
     if 'user_id' in session:
         cursor.execute("""
@@ -188,7 +186,6 @@ def book_detail(book_id):
         """, (session['user_id'], book_id))
         is_bookmarked = cursor.fetchone() is not None
     
-    # Get related books (same category)
     cursor.execute("""
         SELECT * FROM buku 
         WHERE id_kategori = %s AND id_buku != %s 
@@ -206,7 +203,6 @@ def book_detail(book_id):
 def read_book(book_id):
     cursor = mysql.connection.cursor()
     
-    # Get book info
     cursor.execute("SELECT * FROM buku WHERE id_buku = %s", (book_id,))
     book = cursor.fetchone()
     
@@ -214,7 +210,6 @@ def read_book(book_id):
         flash('Buku tidak ditemukan', 'danger')
         return redirect(url_for('books'))
     
-    # Add to reading history
     cursor.execute("""
         INSERT INTO riwayat_baca (id_user, id_buku) 
         VALUES (%s, %s)
@@ -278,7 +273,6 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
         
-        # Simple password check (in production, use hashing)
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['user_id'] = user['id_user']
             session['username'] = user['nama']
@@ -349,20 +343,14 @@ def logout():
     flash('Anda telah logout', 'info')
     return redirect(url_for('index'))
 
-# ======================
-# PROFILE ROUTES
-# ======================
-
 @app.route('/profile')
 @login_required
 def profile():
     cursor = mysql.connection.cursor()
     
-    # Get user info
     cursor.execute("SELECT * FROM users WHERE id_user = %s", (session['user_id'],))
     user = cursor.fetchone()
     
-    # Get reading history
     cursor.execute("""
         SELECT rb.*, b.judul, b.penulis, b.cover
         FROM riwayat_baca rb
@@ -373,7 +361,6 @@ def profile():
     """, (session['user_id'],))
     history = cursor.fetchall()
     
-    # Get bookmarks
     cursor.execute("""
         SELECT bm.*, b.judul, b.penulis, b.cover
         FROM bookmark bm
@@ -383,20 +370,13 @@ def profile():
     """, (session['user_id'],))
     bookmarks = cursor.fetchall()
     
-    # Get statistics
     cursor.execute("SELECT COUNT(*) as total FROM riwayat_baca WHERE id_user = %s", (session['user_id'],))
     total_read = cursor.fetchone()['total']
     
     cursor.execute("SELECT COUNT(*) as total FROM bookmark WHERE id_user = %s", (session['user_id'],))
     total_bookmark = cursor.fetchone()['total']
     
-    return render_template('profile.html', 
-                            user=user, 
-                            history=history, 
-                            bookmarks=bookmarks,
-                            total_read=total_read,
-                            total_bookmark=total_bookmark,
-                            )
+    return render_template('profile.html', user=user, history=history, bookmarks=bookmarks,total_read=total_read,total_bookmark=total_bookmark,)
 
 @app.route('/bookmark/toggle/<int:book_id>', methods=['POST'])
 @login_required
@@ -409,19 +389,12 @@ def toggle_bookmark(book_id):
     """, (session['user_id'], book_id))
     
     if cursor.fetchone():
-        # Remove bookmark
-        cursor.execute("""
-            DELETE FROM bookmark 
-            WHERE id_user = %s AND id_buku = %s
-        """, (session['user_id'], book_id))
+        cursor.execute("""DELETE FROM bookmark WHERE id_user = %s AND id_buku = %s""", (session['user_id'], book_id))
         message = 'Buku dihapus dari bookmark'
         bookmarked = False
     else:
-        # Add bookmark
         cursor.execute("""
-            INSERT INTO bookmark (id_user, id_buku) 
-            VALUES (%s, %s)
-        """, (session['user_id'], book_id))
+            INSERT INTO bookmark (id_user, id_buku) VALUES (%s, %s)""", (session['user_id'], book_id))
         message = 'Buku ditambahkan ke bookmark'
         bookmarked = True
     
@@ -438,7 +411,6 @@ def toggle_bookmark(book_id):
 def admin_dashboard():
     cursor = mysql.connection.cursor()
     
-    # Get statistics
     cursor.execute("SELECT COUNT(*) as total FROM users")
     total_users = cursor.fetchone()['total']
     
@@ -457,11 +429,9 @@ def admin_dashboard():
     cursor.execute("SELECT COUNT(*) as total FROM bookmark")
     total_bookmarks = cursor.fetchone()['total']
     
-    # Get recent users
     cursor.execute("SELECT * FROM users ORDER BY tanggal_daftar DESC LIMIT 5")
     recent_users = cursor.fetchall()
     
-    # Get recent books
     cursor.execute("""
         SELECT b.*, k.nama_kategori 
         FROM buku b 
@@ -470,7 +440,6 @@ def admin_dashboard():
     """)
     recent_books = cursor.fetchall()
     
-    # Get popular books
     cursor.execute("""
         SELECT b.judul, COUNT(rb.id_riwayat) as dibaca
         FROM buku b
@@ -481,11 +450,7 @@ def admin_dashboard():
     """)
     popular_books = cursor.fetchall()
     
-    return render_template('admin/dashboard.html',
-                            total_users=total_users,
-                            total_admins=total_admins,
-                            total_books=total_books,
-                            total_categories=total_categories,
+    return render_template('admin/dashboard.html', total_users=total_users, total_admins=total_admins,total_books=total_books, total_categories=total_categories,
                             total_reads=total_reads,
                             total_bookmarks=total_bookmarks,
                             recent_users=recent_users,
@@ -515,25 +480,20 @@ def add_book():
     cursor = mysql.connection.cursor()
     
     if request.method == 'POST':
-        # Ambil data dari form
         judul = request.form['judul']
         penulis = request.form['penulis']
         penerbit = request.form['penerbit']
         tahun_terbit = request.form['tahun_terbit']
         id_kategori = request.form['id_kategori']
         deskripsi = request.form['deskripsi']
-        
-        # Handle file uploads
         file_buku = request.files['file_buku']
         cover = request.files['cover']
         
         file_buku_filename = None
         cover_filename = None
         
-        # Validasi file buku (PDF)
         if file_buku and file_buku.filename != '':
             if allowed_file(file_buku.filename, app.config['ALLOWED_EXTENSIONS']):
-                # Buat nama file unik
                 ext = file_buku.filename.rsplit('.', 1)[1].lower()
                 file_buku_filename = f"pdf_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
                 file_buku.save(os.path.join(app.config['UPLOAD_FOLDER'], 'pdfs', file_buku_filename))
@@ -544,14 +504,12 @@ def add_book():
             flash('File buku wajib diupload', 'danger')
             return redirect(url_for('add_book'))
         
-        # Validasi cover
         if cover and cover.filename != '':
             if allowed_file(cover.filename, app.config['ALLOWED_IMAGES']):
                 ext = cover.filename.rsplit('.', 1)[1].lower()
                 cover_filename = f"cover_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
                 cover.save(os.path.join(app.config['UPLOAD_FOLDER'], 'covers', cover_filename))
         
-        # Simpan ke database
         cursor.execute("""
             INSERT INTO buku (judul, penulis, penerbit, tahun_terbit, id_kategori, deskripsi, file_buku, cover)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -561,7 +519,6 @@ def add_book():
         flash('Buku berhasil ditambahkan', 'success')
         return redirect(url_for('admin_books'))
     
-    # GET request - tampilkan form tambah buku
     cursor.execute("SELECT * FROM kategori ORDER BY nama_kategori")
     categories = cursor.fetchall()
     
@@ -571,7 +528,6 @@ def add_book():
 @admin_required
 def edit_book(book_id):
     cursor = mysql.connection.cursor()
-    
     if request.method == 'POST':
         judul = request.form['judul']
         penulis = request.form['penulis']
@@ -580,24 +536,20 @@ def edit_book(book_id):
         id_kategori = request.form['id_kategori']
         deskripsi = request.form['deskripsi']
         
-        # Handle file buku baru jika ada
         file_buku = request.files['file_buku']
         if file_buku and file_buku.filename != '':
             if allowed_file(file_buku.filename, app.config['ALLOWED_EXTENSIONS']):
-                # Hapus file lama
                 cursor.execute("SELECT file_buku FROM buku WHERE id_buku = %s", (book_id,))
                 old_file = cursor.fetchone()
                 if old_file and old_file['file_buku']:
                     old_path = os.path.join(app.config['UPLOAD_FOLDER'], 'pdfs', old_file['file_buku'])
                     if os.path.exists(old_path):
                         os.remove(old_path)
-                
-                # Upload file baru
+                        
                 ext = file_buku.filename.rsplit('.', 1)[1].lower()
                 file_buku_filename = f"pdf_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
                 file_buku.save(os.path.join(app.config['UPLOAD_FOLDER'], 'pdfs', file_buku_filename))
                 
-                # Update dengan file baru
                 cursor.execute("""
                     UPDATE buku 
                     SET judul=%s, penulis=%s, penerbit=%s, tahun_terbit=%s, id_kategori=%s, deskripsi=%s, file_buku=%s
@@ -607,18 +559,15 @@ def edit_book(book_id):
                 flash('File buku harus berformat PDF', 'danger')
                 return redirect(url_for('edit_book', book_id=book_id))
         else:
-            # Update tanpa file baru
             cursor.execute("""
                 UPDATE buku 
                 SET judul=%s, penulis=%s, penerbit=%s, tahun_terbit=%s, id_kategori=%s, deskripsi=%s
                 WHERE id_buku=%s
             """, (judul, penulis, penerbit, tahun_terbit, id_kategori, deskripsi, book_id))
         
-        # Handle cover baru jika ada
         cover = request.files['cover']
         if cover and cover.filename != '':
             if allowed_file(cover.filename, app.config['ALLOWED_IMAGES']):
-                # Hapus cover lama
                 cursor.execute("SELECT cover FROM buku WHERE id_buku = %s", (book_id,))
                 old_cover = cursor.fetchone()
                 if old_cover and old_cover['cover']:
@@ -626,19 +575,16 @@ def edit_book(book_id):
                     if os.path.exists(old_path):
                         os.remove(old_path)
                 
-                # Upload cover baru
                 ext = cover.filename.rsplit('.', 1)[1].lower()
                 cover_filename = f"cover_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
                 cover.save(os.path.join(app.config['UPLOAD_FOLDER'], 'covers', cover_filename))
                 
-                # Update cover
                 cursor.execute("UPDATE buku SET cover=%s WHERE id_buku=%s", (cover_filename, book_id))
         
         mysql.connection.commit()
         flash('Buku berhasil diperbarui', 'success')
         return redirect(url_for('admin_books'))
     
-    # GET request - tampilkan form edit buku
     cursor.execute("SELECT * FROM buku WHERE id_buku = %s", (book_id,))
     book = cursor.fetchone()
     
@@ -656,11 +602,8 @@ def edit_book(book_id):
 def delete_book(book_id):
     cursor = mysql.connection.cursor()
     
-    # Get file names before deleting
     cursor.execute("SELECT file_buku, cover FROM buku WHERE id_buku = %s", (book_id,))
     book = cursor.fetchone()
-    
-    # Delete files
     if book:
         if book['file_buku']:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'pdfs', book['file_buku'])
@@ -672,7 +615,6 @@ def delete_book(book_id):
             if os.path.exists(cover_path):
                 os.remove(cover_path)
     
-    # Delete from database
     cursor.execute("DELETE FROM buku WHERE id_buku = %s", (book_id,))
     mysql.connection.commit()
     
@@ -713,7 +655,6 @@ def add_category():
 def delete_category(category_id):
     cursor = mysql.connection.cursor()
     
-    # Check if category has books
     cursor.execute("SELECT COUNT(*) as total FROM buku WHERE id_kategori = %s", (category_id,))
     count = cursor.fetchone()['total']
     
